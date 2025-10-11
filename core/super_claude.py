@@ -11,6 +11,7 @@ Chef d'orchestre coordonnant les équipes d'agents spécialisés :
 import json
 import subprocess
 import asyncio
+import os
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
 from enum import Enum
@@ -39,7 +40,7 @@ class SuperClaude:
         self.session_id = 1
         self.agents = {
             AgentTeam.ADK: {
-                "bridge_path": "/Users/sahebmlik/.gemini/bridge.py",
+                "bridge_path": os.environ.get("ADK_BRIDGE_PATH", "/Users/sahebmlik/.gemini/bridge.py"),
                 "available_agents": [
                     "watch_collect",
                     "analyse_watch_report", 
