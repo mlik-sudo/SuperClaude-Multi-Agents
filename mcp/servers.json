@@ -14,13 +14,17 @@
   },
   {
     "name": "anthropic",
-    "command": "anthropic-mcp-server",
-    "description": "Anthropic Claude MCP - Research, code, writing agents (Phase 2 - Planned)",
-    "auth": "oauth",
-    "client_name": "super-claude",
-    "token_cache_dir": "~/.cache/super-claude/anthropic",
+    "command": "python agents/anthropic/bridge.py",
+    "description": "Anthropic Claude agents via JSON-RPC STDIO - Research, code, writing (Phase 3 - ACTIVE)",
+    "auth": null,
     "headers": null,
-    "tools": []
+    "tools": [
+      "research_agent",
+      "code_agent",
+      "writing_agent"
+    ],
+    "protocol": "json-rpc-2.0-stdio",
+    "status": "active"
   },
   {
     "name": "openai",

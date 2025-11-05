@@ -307,6 +307,42 @@ class Settings(BaseSettings):
 
         return self.adk_workspace
 
+    def get_anthropic_bridge_path(self) -> Path:
+        """
+        Get Anthropic bridge path with fallback logic.
+
+        Priority:
+        1. Environment variable ANTHROPIC_BRIDGE_PATH
+        2. Default location: agents/anthropic/bridge.py in project root
+
+        Returns:
+            Path to the Anthropic bridge.py script
+
+        Raises:
+            ValueError: If bridge path not found
+        """
+        # Check for environment variable override
+        env_path = os.getenv("ANTHROPIC_BRIDGE_PATH")
+        if env_path:
+            bridge_path = Path(env_path)
+            if not bridge_path.exists():
+                raise ValueError(f"Anthropic bridge not found at: {bridge_path}")
+            return bridge_path
+
+        # Try default location relative to project root
+        # Assuming this file is in config/, project root is parent
+        project_root = Path(__file__).parent.parent
+        default_path = project_root / "agents" / "anthropic" / "bridge.py"
+
+        if default_path.exists():
+            return default_path
+
+        raise ValueError(
+            "Anthropic bridge not found. "
+            f"Expected at: {default_path} "
+            "or set ANTHROPIC_BRIDGE_PATH environment variable."
+        )
+
     def to_dict(self) -> dict:
         """Export settings as dictionary (excluding sensitive data)."""
         data = self.model_dump()

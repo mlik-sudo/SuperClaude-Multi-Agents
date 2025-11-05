@@ -19,5 +19,8 @@ python-json-logger>=2.0.7,<3.0.0    # JSON log formatting
 # HTTP Client (for future API integrations)
 httpx>=0.26.0,<1.0.0                # Async HTTP client
 
+# AI/ML APIs
+anthropic>=0.21.0,<1.0.0            # Anthropic Claude API (Phase 3)
+
 # Utilities
 tenacity>=8.2.3,<9.0.0              # Retry logic with backoff

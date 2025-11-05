@@ -176,9 +176,122 @@ class SuperClaude:
     
     async def delegate_to_anthropic(self, agent_name: str, params: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Délégation à l'équipe Anthropic (MCP) - Phase 2
+        Délégation à l'équipe Anthropic (MCP) - Phase 3 ACTIVE
+
+        Calls Anthropic Claude agents via JSON-RPC 2.0 STDIO bridge.
+        Supported agents: research_agent, code_agent, writing_agent
+
+        Args:
+            agent_name: Name of the Anthropic agent (research_agent, code_agent, writing_agent)
+            params: Agent-specific parameters
+
+        Returns:
+            Result dict with status, output, and usage tracking
         """
-        return {"status": "not_implemented", "output": "Phase 2 - Équipe Anthropic en développement"}
+        try:
+            # Get bridge path from configuration
+            if settings:
+                try:
+                    bridge_path = str(settings.get_anthropic_bridge_path())
+                except ValueError as e:
+                    self.logger.error(f"Anthropic bridge not found: {e}")
+                    return {
+                        "status": "error",
+                        "error": f"Bridge not found: {e}",
+                        "output": "Anthropic bridge not configured"
+                    }
+            else:
+                # Fallback to default location
+                project_root = Path(__file__).parent.parent
+                bridge_path = str(project_root / "agents" / "anthropic" / "bridge.py")
+
+                if not Path(bridge_path).exists():
+                    return {
+                        "status": "error",
+                        "error": "Bridge file not found",
+                        "output": f"Anthropic bridge not found at {bridge_path}"
+                    }
+
+            # Construct JSON-RPC 2.0 request
+            request = {
+                "jsonrpc": "2.0",
+                "id": f"sc-{self.session_id}",
+                "method": f"tools/{agent_name}",
+                "params": params
+            }
+
+            request_json = json.dumps(request)
+            timeout = settings.agent_timeout if settings else 300
+
+            self.logger.info(f"🟢 Calling Anthropic {agent_name} via MCP bridge")
+
+            # Execute bridge via subprocess
+            proc = await asyncio.create_subprocess_exec(
+                "python", bridge_path,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+
+            # Send request and get response
+            stdout, stderr = await asyncio.wait_for(
+                proc.communicate(input=request_json.encode()),
+                timeout=timeout
+            )
+
+            # Parse JSON-RPC response
+            if proc.returncode == 0 and stdout:
+                response = json.loads(stdout.decode())
+
+                if "error" in response:
+                    # JSON-RPC error response
+                    error_obj = response["error"]
+                    self.logger.error(f"Anthropic {agent_name} error: {error_obj.get('message')}")
+                    return {
+                        "status": "error",
+                        "error": error_obj.get("message", "Unknown error"),
+                        "code": error_obj.get("code", -1),
+                        "output": json.dumps(error_obj)
+                    }
+
+                if "result" in response:
+                    # Success response
+                    result = response["result"]
+                    self.logger.info(f"✅ Anthropic {agent_name} completed successfully")
+                    self.session_id += 1
+                    return result
+
+            # Failed execution
+            error_msg = stderr.decode() if stderr else "Unknown error"
+            self.logger.error(f"Anthropic {agent_name} failed: {error_msg}")
+            return {
+                "status": "error",
+                "error": "Execution failed",
+                "output": error_msg,
+                "returncode": proc.returncode
+            }
+
+        except asyncio.TimeoutError:
+            self.logger.error(f"Anthropic {agent_name} timed out after {timeout}s")
+            return {
+                "status": "timeout",
+                "error": f"Agent execution timed out after {timeout}s",
+                "output": "Timeout exceeded"
+            }
+        except json.JSONDecodeError as e:
+            self.logger.error(f"Invalid JSON response from Anthropic {agent_name}: {e}")
+            return {
+                "status": "error",
+                "error": f"Invalid JSON response: {e}",
+                "output": stdout.decode() if stdout else ""
+            }
+        except Exception as e:
+            self.logger.exception(f"Anthropic {agent_name} raised exception")
+            return {
+                "status": "exception",
+                "error": str(e),
+                "output": f"Exception: {type(e).__name__}: {e}"
+            }
     
     async def delegate_to_openai(self, agent_name: str, params: Dict[str, Any]) -> Dict[str, Any]:
         """
