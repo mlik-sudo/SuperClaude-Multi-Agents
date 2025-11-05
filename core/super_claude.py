@@ -4,16 +4,26 @@
 
 Chef d'orchestre coordonnant les équipes d'agents spécialisés :
 - Équipe ADK (Google A2A)
-- Équipe Anthropic (MCP) 
+- Équipe Anthropic (MCP)
 - Équipe OpenAI (Agents)
 """
 
 import json
 import subprocess
 import asyncio
+import logging
+from pathlib import Path
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
 from enum import Enum
+
+# Import centralized configuration
+try:
+    from config import settings
+except ImportError:
+    # Fallback if config module not available yet
+    settings = None
+    logging.warning("Config module not found, using fallback configuration")
 
 class AgentTeam(Enum):
     ADK = "adk"
@@ -31,18 +41,31 @@ class AgentTask:
 class SuperClaude:
     """
     🧠 Super Claude - Orchestrateur Central
-    
+
     Coordonne et délègue aux équipes d'agents spécialisés
     """
-    
+
     def __init__(self):
         self.session_id = 1
+        self.logger = logging.getLogger(__name__)
+
+        # Get bridge path from configuration or fallback
+        if settings:
+            try:
+                bridge_path = str(settings.get_adk_bridge_path())
+            except ValueError as e:
+                self.logger.warning(f"ADK bridge path not configured: {e}")
+                bridge_path = str(Path.home() / ".gemini" / "bridge.py")
+        else:
+            # Fallback for backward compatibility
+            bridge_path = str(Path.home() / ".gemini" / "bridge.py")
+
         self.agents = {
             AgentTeam.ADK: {
-                "bridge_path": "/Users/sahebmlik/.gemini/bridge.py",
+                "bridge_path": bridge_path,
                 "available_agents": [
                     "watch_collect",
-                    "analyse_watch_report", 
+                    "analyse_watch_report",
                     "curate_digest",
                     "label_github_issue"
                 ]
@@ -52,17 +75,22 @@ class SuperClaude:
                 "available_agents": []
             },
             AgentTeam.OPENAI: {
-                "status": "planned", 
-                "available_agents": []  
+                "status": "planned",
+                "available_agents": []
             }
         }
+
+        self.logger.info(f"SuperClaude initialized with ADK bridge at: {bridge_path}")
     
     async def delegate_to_adk(self, agent_name: str, params: Dict[str, Any]) -> Dict[str, Any]:
         """
         Délégation à l'équipe ADK (Google A2A)
         """
         bridge_path = self.agents[AgentTeam.ADK]["bridge_path"]
-        
+
+        # Get timeout from config or use default
+        timeout = settings.agent_timeout if settings else 300
+
         mcp_request = {
             "jsonrpc": "2.0",
             "id": self.session_id,
@@ -73,7 +101,9 @@ class SuperClaude:
             }
         }
         self.session_id += 1
-        
+
+        self.logger.info(f"Delegating to ADK agent: {agent_name}")
+
         try:
             proc = await asyncio.create_subprocess_exec(
                 "python3", "-u", bridge_path,
@@ -81,21 +111,29 @@ class SuperClaude:
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE
             )
-            
-            stdout, stderr = await proc.communicate(
-                input=json.dumps(mcp_request).encode()
+
+            # Add timeout to communicate
+            stdout, stderr = await asyncio.wait_for(
+                proc.communicate(input=json.dumps(mcp_request).encode()),
+                timeout=timeout
             )
-            
+
             if proc.returncode == 0:
                 response = json.loads(stdout.decode())
                 if "result" in response:
                     content = response["result"].get("content", [{}])
                     if content:
+                        self.logger.info(f"ADK agent {agent_name} completed successfully")
                         return json.loads(content[0].get("text", "{}"))
-                    
+
+            self.logger.error(f"ADK agent {agent_name} failed: {stderr.decode()}")
             return {"status": "error", "output": stderr.decode()}
-            
+
+        except asyncio.TimeoutError:
+            self.logger.error(f"ADK agent {agent_name} timed out after {timeout}s")
+            return {"status": "timeout", "output": f"Agent execution timed out after {timeout}s"}
         except Exception as e:
+            self.logger.exception(f"ADK agent {agent_name} raised exception")
             return {"status": "exception", "output": str(e)}
     
     async def delegate_to_anthropic(self, agent_name: str, params: Dict[str, Any]) -> Dict[str, Any]:
