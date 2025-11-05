@@ -1,0 +1,109 @@
+{
+  "mcpServers": {
+    "anthropic": {
+      "command": "python",
+      "args": ["agents/anthropic/bridge.py"],
+      "env": {
+        "ANTHROPIC_API_KEY": "${ANTHROPIC_API_KEY}",
+        "ANTHROPIC_MODEL": "${ANTHROPIC_MODEL:-claude-3-5-sonnet-20241022}"
+      },
+      "protocol": "stdio",
+      "transport": "stdio",
+      "tools": [
+        {
+          "name": "research_agent",
+          "description": "Agent de recherche et synthèse d'informations. Analyse les questions et produit des synthèses structurées avec résumé, points clés, insights et recommandations.",
+          "parameters": {
+            "query": {
+              "type": "string",
+              "description": "Question ou sujet de recherche à analyser"
+            },
+            "depth": {
+              "type": "string",
+              "description": "Profondeur de la recherche (quick, standard, deep)",
+              "enum": ["quick", "standard", "deep"],
+              "default": "standard"
+            }
+          }
+        },
+        {
+          "name": "code_agent",
+          "description": "Agent de génération et analyse de code. Produit du code propre, documenté et testé avec explications détaillées.",
+          "parameters": {
+            "task": {
+              "type": "string",
+              "description": "Tâche de code à réaliser (génération, analyse, refactoring)"
+            },
+            "language": {
+              "type": "string",
+              "description": "Langage de programmation cible",
+              "default": "python"
+            },
+            "context": {
+              "type": "string",
+              "description": "Contexte additionnel (code existant, contraintes)",
+              "default": ""
+            }
+          }
+        },
+        {
+          "name": "writing_agent",
+          "description": "Agent de rédaction et édition de contenu. Améliore, résume, développe ou traduit du contenu selon le style demandé.",
+          "parameters": {
+            "content": {
+              "type": "string",
+              "description": "Contenu à traiter"
+            },
+            "style": {
+              "type": "string",
+              "description": "Style cible (professional, casual, technical, marketing)",
+              "enum": ["professional", "casual", "technical", "marketing"],
+              "default": "professional"
+            },
+            "task": {
+              "type": "string",
+              "description": "Type de tâche (improve, summarize, expand, translate)",
+              "enum": ["improve", "summarize", "expand", "translate"],
+              "default": "improve"
+            }
+          }
+        }
+      ],
+      "status": "active",
+      "version": "1.0.0",
+      "capabilities": {
+        "streaming": false,
+        "async": true
+      }
+    },
+    "adk": {
+      "command": "python",
+      "args": ["agents/adk/bridge.py"],
+      "env": {
+        "ADK_BRIDGE_PATH": "${ADK_BRIDGE_PATH}"
+      },
+      "protocol": "stdio",
+      "transport": "stdio",
+      "tools": [
+        {
+          "name": "watch_collect",
+          "description": "Collecte de données de surveillance depuis des sources externes"
+        },
+        {
+          "name": "analyse_watch_report",
+          "description": "Analyse de rapports de surveillance"
+        },
+        {
+          "name": "curate_digest",
+          "description": "Curation de digest à partir de données collectées"
+        },
+        {
+          "name": "label_github_issue",
+          "description": "Labellisation automatique d'issues GitHub"
+        }
+      ],
+      "status": "active",
+      "version": "1.0.0"
+    }
+  }
+}
