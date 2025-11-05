@@ -8,6 +8,7 @@ pytest-asyncio>=0.23.2,<1.0.0       # Async test support
 pytest-cov>=4.1.0,<5.0.0            # Coverage plugin
 pytest-mock>=3.12.0,<4.0.0          # Mocking utilities
 pytest-timeout>=2.2.0,<3.0.0        # Test timeout control
+pytest-watch>=4.2.0,<5.0.0          # Auto-run tests on file changes
 
 # Code Quality
 black>=23.12.1,<24.0.0              # Code formatter
@@ -22,6 +23,10 @@ pre-commit>=3.6.0,<4.0.0            # Git hooks framework
 # Documentation
 sphinx>=7.2.6,<8.0.0                # Documentation generator
 sphinx-rtd-theme>=2.0.0,<3.0.0      # Read the Docs theme
+
+# Security
+bandit>=1.7.5,<2.0.0                # Security linter for Python code
+safety>=2.3.5,<3.0.0                # Dependency vulnerability scanner
 
 # Development Tools
 ipython>=8.18.1,<9.0.0              # Enhanced REPL

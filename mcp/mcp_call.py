@@ -20,7 +20,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import shlex
+import subprocess
 import sys
+import uuid
 import warnings
 from pathlib import Path
 from textwrap import indent
@@ -242,28 +245,96 @@ def command_call(args: argparse.Namespace, servers: list[dict[str, Any]]) -> int
             return 1
         kwargs.update(call_kwargs)
 
-    # For now, simulate the call
-    # In a real implementation, you would:
-    # 1. Load the MCP server using the command
-    # 2. Call the tool with kwargs
-    # 3. Return the result
-
-    print(
-        f"[MOCK] Would call {mcp_name}.{tool_name} with args: {json.dumps(kwargs, indent=2)}"
-    )
-    print(f"[MOCK] Command: {command}")
-
-    # Mock result
-    result = {
-        "status": "mock_success",
-        "mcp": mcp_name,
-        "tool": tool_name,
-        "args": kwargs,
-        "note": "This is a mock response. Real MCP integration pending.",
+    # Real MCP call via JSON-RPC 2.0
+    # Build JSON-RPC 2.0 request
+    request_id = str(uuid.uuid4())
+    json_rpc_request = {
+        "jsonrpc": "2.0",
+        "id": request_id,
+        "method": f"tools/{tool_name}",
+        "params": kwargs
     }
 
-    print(json.dumps(result, indent=2))
-    return 0
+    # Parse command and prepare execution
+    command_parts = shlex.split(command)
+    project_root = Path(__file__).parent.parent
+
+    try:
+        # Launch MCP server with JSON-RPC request
+        proc = subprocess.Popen(
+            command_parts,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            cwd=str(project_root)
+        )
+
+        # Send JSON-RPC request via stdin
+        request_json = json.dumps(json_rpc_request)
+        stdout_data, stderr_data = proc.communicate(input=request_json, timeout=300)
+
+        # Parse JSON-RPC response
+        if not stdout_data.strip():
+            print(json.dumps({
+                "status": "error",
+                "error": "No response from MCP server",
+                "stderr": stderr_data[:500] if stderr_data else ""
+            }), file=sys.stderr)
+            return 1
+
+        try:
+            response = json.loads(stdout_data)
+
+            # Check for JSON-RPC error
+            if "error" in response:
+                error_obj = response["error"]
+                error_msg = error_obj.get("message", "Unknown error")
+                error_code = error_obj.get("code", -1)
+                print(json.dumps({
+                    "status": "error",
+                    "error": error_msg,
+                    "code": error_code,
+                    "data": error_obj.get("data")
+                }, indent=2), file=sys.stderr)
+                return 1
+
+            # Extract and return result
+            if "result" in response:
+                result = response["result"]
+                print(json.dumps(result, indent=2))
+                return 0
+            else:
+                print(json.dumps({
+                    "status": "error",
+                    "error": "No 'result' field in JSON-RPC response",
+                    "response": response
+                }, indent=2), file=sys.stderr)
+                return 1
+
+        except json.JSONDecodeError as e:
+            print(json.dumps({
+                "status": "error",
+                "error": f"Invalid JSON response from MCP server: {str(e)}",
+                "stdout": stdout_data[:500],
+                "stderr": stderr_data[:500] if stderr_data else ""
+            }, indent=2), file=sys.stderr)
+            return 1
+
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.wait()
+        print(json.dumps({
+            "status": "error",
+            "error": f"MCP call timed out after 300 seconds"
+        }, indent=2), file=sys.stderr)
+        return 1
+    except Exception as e:
+        print(json.dumps({
+            "status": "error",
+            "error": f"Failed to execute MCP call: {str(e)}"
+        }, indent=2), file=sys.stderr)
+        return 1
 
 
 def build_parser() -> argparse.ArgumentParser:
