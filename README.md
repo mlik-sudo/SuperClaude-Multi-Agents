@@ -66,13 +66,20 @@ SuperClaude-Multi-Agents/
 
 ## ✨ Nouveautés
 
+**Phase 2.5 - Hybrid MCP System** 🚀
+- ✅ **98% Token Savings** - Context-efficient orchestration via code execution
+- ✅ **Progressive Disclosure** - Load tools on-demand, not all upfront
+- ✅ **Smart Routing** - Automatic simple/complex mode selection
+- ✅ **Skills System** - Reusable workflow scripts
+
+**Production Ready** 💪
 - ✅ **Configuration Centralisée** - Gestion des variables d'environnement avec validation Pydantic
 - ✅ **Suite de Tests Complète** - Tests unitaires et d'intégration avec pytest (>70% coverage)
 - ✅ **CI/CD GitHub Actions** - Tests automatisés, linting, security scanning
 - ✅ **Logging Structuré** - Logs JSON avec rotation et performance tracking
 - ✅ **Validation des Schémas** - Validation stricte des inputs avec Pydantic
 - ✅ **Outils de Développement** - Makefile, pre-commit hooks, auto-formatage
-- ✅ **Documentation Complète** - Setup, Contributing, Architecture
+- ✅ **Documentation Complète** - Setup, Contributing, Architecture, Hybrid MCP
 
 ## 🚀 Quick Start
 
