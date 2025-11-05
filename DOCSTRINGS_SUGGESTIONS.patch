@@ -1,0 +1,55 @@
+# Docstrings Suggestions - SuperClaude
+
+Date : 2025-11-05 21:53
+Projet : .
+Fonctions traitées : 1
+
+## Instructions
+
+Ce fichier contient les suggestions de docstrings pour fonctions Python
+sans documentation. Revue manuelle recommandée avant application.
+
+Pour appliquer automatiquement (à vos risques) :
+    python apply_docstrings.py DOCSTRINGS_SUGGESTIONS.patch
+
+---
+
+
+## agents/adk/bridge.py
+
+### Fonction `main` (ligne 358)
+
+```python
+def main():
+    """
+    Main.
+
+    """
+    # ... reste du code
+```
+
+**Tokens utilisés :** 561
+
+---
+
+
+## 📊 Statistiques
+
+| Métrique | Valeur |
+|----------|--------|
+| Fichiers modifiés | 1 |
+| Docstrings générées | 1 |
+| Tokens totaux | 561 |
+
+### 💰 Économie vs Approche Naïve
+
+| Approche | Fonctions | Tokens | Description |
+|----------|-----------|--------|-------------|
+| Naïve | Toutes (~200) | ~30,000 | Parser toutes + générer docs même si existantes |
+| Hybride (actuel) | 1 (filtrées) | 561 | Parse AST local + générer uniquement manquantes |
+| **Économie** | **-199** | **~29,439** | **~83%** |
+
+---
+
+*Généré par SuperClaude Docs Generator Skill*
+*Propulsé par Anthropic Claude writing_agent*
