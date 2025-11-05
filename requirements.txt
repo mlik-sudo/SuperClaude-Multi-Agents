@@ -1,0 +1,22 @@
+# SuperClaude Multi-Agents - Production Dependencies
+# Python 3.8+
+
+# Configuration Management
+python-dotenv>=1.0.0,<2.0.0        # Environment variables support
+pyyaml>=6.0.1,<7.0.0                # YAML configuration files
+
+# Data Validation
+pydantic>=2.5.0,<3.0.0              # Schema validation and settings management
+
+# Async & Concurrency
+aiofiles>=23.2.1,<24.0.0            # Async file operations
+
+# Logging & Monitoring
+structlog>=24.1.0,<25.0.0           # Structured logging
+python-json-logger>=2.0.7,<3.0.0    # JSON log formatting
+
+# HTTP Client (for future API integrations)
+httpx>=0.26.0,<1.0.0                # Async HTTP client
+
+# Utilities
+tenacity>=8.2.3,<9.0.0              # Retry logic with backoff

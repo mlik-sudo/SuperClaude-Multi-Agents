@@ -1,0 +1,33 @@
+[
+  {
+    "name": "adk",
+    "command": "python agents/adk/bridge.py",
+    "description": "Google ADK agents - Tech surveillance, analysis, curation, labeling (Phase 1)",
+    "auth": null,
+    "headers": null,
+    "tools": [
+      "watch_collect",
+      "analyse_watch_report",
+      "curate_digest",
+      "label_github_issue"
+    ]
+  },
+  {
+    "name": "anthropic",
+    "command": "anthropic-mcp-server",
+    "description": "Anthropic Claude MCP - Research, code, writing agents (Phase 2 - Planned)",
+    "auth": "oauth",
+    "client_name": "super-claude",
+    "token_cache_dir": "~/.cache/super-claude/anthropic",
+    "headers": null,
+    "tools": []
+  },
+  {
+    "name": "openai",
+    "command": "openai-mcp-server",
+    "description": "OpenAI GPT Agents - Vision, creativity, reasoning (Phase 3 - Planned)",
+    "auth": null,
+    "headers": null,
+    "tools": []
+  }
+]
