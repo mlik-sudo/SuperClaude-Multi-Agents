@@ -1,0 +1,227 @@
+# 🧠 SuperClaude Multi-Agents Configuration
+# Version: 1.0.0
+
+# Profils de configuration
+# Usage: ai run <intent> --profile <name>
+profiles:
+  default:
+    # Modèles par catégorie
+    models:
+      doc: gemini-1.5-flash          # Recherche doc, veille
+      code: claude-3.5-sonnet        # Génération code, refactoring
+      multimodal: gpt-4o             # Vision, UI→Code
+      creative: gpt-4o               # Génération créative
+      analysis: gemini-1.5-flash     # Analyse de rapports
+
+    # Seuils de qualité
+    thresholds:
+      security_blocking_min: 80      # Score minimum pour sécurité blocking
+      coverage_min: 70               # Couverture de tests minimale (%)
+      mutation_min: 50               # Score mutation testing minimal (%)
+      pr_review_max_comments: 10     # Commentaires max par PR
+
+    # Budgets
+    budgets:
+      per_task_usd: 0.75            # Budget maximum par tâche
+      per_day_usd: 10.0             # Budget journalier
+      per_month_usd: 250.0          # Budget mensuel
+
+    # Policies
+    policies:
+      allow_internet: true           # Autoriser accès internet
+      redact_pii: true              # Redaction PII automatique
+      cache_enabled: true           # Activer le cache
+      auto_apply_patches: false     # Appliquer automatiquement les patches
+
+  # Profil économique (low-cost)
+  eco:
+    models:
+      doc: gemini-1.5-flash
+      code: gemini-1.5-flash
+      multimodal: gemini-1.5-flash
+      creative: gemini-1.5-flash
+      analysis: gemini-1.5-flash
+
+    thresholds:
+      security_blocking_min: 75
+      coverage_min: 60
+      mutation_min: 40
+      pr_review_max_comments: 5
+
+    budgets:
+      per_task_usd: 0.25
+      per_day_usd: 3.0
+      per_month_usd: 75.0
+
+    policies:
+      allow_internet: true
+      redact_pii: true
+      cache_enabled: true
+      auto_apply_patches: false
+
+  # Profil premium (high-quality)
+  premium:
+    models:
+      doc: claude-3.5-sonnet
+      code: claude-3.5-sonnet
+      multimodal: gpt-4o
+      creative: gpt-4o
+      analysis: claude-3.5-sonnet
+
+    thresholds:
+      security_blocking_min: 90
+      coverage_min: 80
+      mutation_min: 60
+      pr_review_max_comments: 20
+
+    budgets:
+      per_task_usd: 2.0
+      per_day_usd: 30.0
+      per_month_usd: 750.0
+
+    policies:
+      allow_internet: true
+      redact_pii: true
+      cache_enabled: true
+      auto_apply_patches: false
+
+  # Profil CI/CD (automated)
+  ci:
+    models:
+      doc: gemini-1.5-flash
+      code: claude-3.5-sonnet
+      multimodal: gpt-4o
+      creative: gpt-4o
+      analysis: gemini-1.5-flash
+
+    thresholds:
+      security_blocking_min: 85
+      coverage_min: 75
+      mutation_min: 55
+      pr_review_max_comments: 15
+
+    budgets:
+      per_task_usd: 1.0
+      per_day_usd: 20.0
+      per_month_usd: 500.0
+
+    policies:
+      allow_internet: true
+      redact_pii: true
+      cache_enabled: true
+      auto_apply_patches: true      # Auto-apply en CI
+
+# Politiques de blocage (blocking policies)
+blocking_policies:
+  # Sécurité
+  security:
+    - type: secrets_detection
+      enabled: true
+      severity: blocking
+      tools: [gitleaks, truffleHog]
+      message: "Secrets détectés dans le code"
+
+    - type: vulnerability_scan
+      enabled: true
+      severity: blocking
+      min_cvss_score: 7.0           # CVSS >= 7.0 = blocking
+      tools: [trivy, snyk]
+      message: "Vulnérabilités critiques détectées"
+
+    - type: license_check
+      enabled: true
+      severity: blocking
+      forbidden_licenses: [GPL, AGPL, SSPL]
+      message: "Licences incompatibles détectées"
+
+  # Code Quality
+  quality:
+    - type: mutation_testing
+      enabled: true
+      severity: advisory
+      min_score: 50
+      message: "Score mutation testing insuffisant"
+
+    - type: code_coverage
+      enabled: true
+      severity: advisory
+      min_coverage: 70
+      message: "Couverture de tests insuffisante"
+
+  # Best Practices
+  practices:
+    - type: anti_patterns
+      enabled: true
+      severity: advisory
+      patterns: [god_object, magic_numbers, hardcoded_credentials]
+      message: "Anti-patterns détectés"
+
+# Observabilité et logging
+observability:
+  # Logging
+  logging:
+    level: INFO                     # DEBUG, INFO, WARNING, ERROR
+    format: json                    # json, text
+    destination: .ai/logs/          # Répertoire des logs
+
+  # Métriques
+  metrics:
+    enabled: true
+    export_format: ndjson           # ndjson, prometheus, statsd
+    export_path: .ai/USAGE.ndjson
+
+  # Tracing
+  tracing:
+    enabled: false
+    provider: null                  # jaeger, zipkin, datadog
+
+# Cache et optimisations
+cache:
+  enabled: true
+  ttl_seconds: 604800               # 7 jours
+  max_size_mb: 1024                 # 1 GB
+  storage_path: .ai/cache/
+
+# Intégrations externes
+integrations:
+  # GitHub
+  github:
+    enabled: true
+    token_env: GITHUB_TOKEN
+    api_url: https://api.github.com
+
+  # SonarQube
+  sonarqube:
+    enabled: false
+    url: null
+    token_env: SONAR_TOKEN
+
+  # CodeQL
+  codeql:
+    enabled: false
+    path: null
+
+  # Semgrep
+  semgrep:
+    enabled: false
+    rules_path: null
+
+# Rétention des artefacts
+retention:
+  logs_days: 30
+  reports_days: 90
+  artefacts_permanent: true
+  cache_days: 7
+  prototypes_hours: 24              # Prototypes éphémères
+
+# Notifications
+notifications:
+  enabled: false
+  channels:
+    slack:
+      enabled: false
+      webhook_url_env: SLACK_WEBHOOK
+    email:
+      enabled: false
+      smtp_host: null
+      from: null

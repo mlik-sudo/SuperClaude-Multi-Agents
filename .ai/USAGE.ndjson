@@ -1,0 +1,4 @@
+# SuperClaude Usage Log
+# Format: NDJSON (one JSON object per line)
+# Schema: {"timestamp": "ISO8601", "task_id": "uuid", "team": "adk|anthropic|openai", "agent": "agent_name", "intent": "intent", "cost_usd": 0.00, "latency_ms": 0, "model": "provider:model@version", "status": "ok|advisory|blocking|error", "tokens": {"input": 0, "output": 0, "total": 0}}
+{"timestamp": "2025-11-07T10:05:31.834081Z", "task_id": "2718b29a-1ba8-42d5-9a16-8eb3effec57e", "status": "ok", "cost_usd": 0.12, "latency_ms": 4500, "tokens": {"total": 2000}, "model": "gemini:1.5-flash@2024-11"}

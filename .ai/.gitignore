@@ -1,0 +1,18 @@
+# Ignore temporary and cache files
+cache/
+*.tmp
+*.temp
+
+# Keep structure
+!cache/.gitkeep
+!logs/.gitkeep
+!reports/.gitkeep
+!artefacts/.gitkeep
+
+# Ignore large log files
+logs/*.ndjson
+*.log
+
+# Ignore prototype artefacts (ephemeral)
+artefacts/proto/*
+!artefacts/proto/.gitkeep
