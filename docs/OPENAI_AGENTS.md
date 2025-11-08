@@ -8,6 +8,7 @@ Cette documentation décrit l'état actuel des agents OpenAI prévus pour SuperC
 - **Modèles recommandés** : GPT-4o, GPT-4o-mini, gpt-4.1.
 - **Environnements conseillés** : sandbox dédiée ou compte OpenAI de test (clés restreintes).
 - **Sécurité** : suivre la check-list `docs/SECURITY.md` avant toute activation.
+- **Activation** : nécessite `OPENAI_AGENTS_ENABLED=true` + `OPENAI_API_KEY` dans `.env`.
 
 ## 🧩 Catalogue détaillé
 

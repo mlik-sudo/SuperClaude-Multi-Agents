@@ -26,6 +26,7 @@ from .contracts import (
     TaskMessage, TaskResult, TaskStatus, TaskConstraints, TaskCost,
     PolicyMode, validate_intent
 )
+from config.settings import OPENAI_AGENTS_ENABLED
 
 # Configuration du logging
 logging.basicConfig(
@@ -250,33 +251,36 @@ class AgentRegistry:
             ),
         ]
 
-        # Équipe OpenAI (Phase 3 - placeholder)
-        openai_agents = [
-            AgentCapability(
-                team="openai",
-                agent_name="ui_to_code",
-                intents=["ui.convert", "vision.ui"],
-                cost_per_token=0.00005,  # GPT-4o
-                avg_latency_ms=7000,
-                sla_success_rate=95.0
-            ),
-            AgentCapability(
-                team="openai",
-                agent_name="migrator_5000",
-                intents=["code.migrate.complex"],
-                cost_per_token=0.00005,
-                avg_latency_ms=10000,
-                sla_success_rate=94.0
-            ),
-            AgentCapability(
-                team="openai",
-                agent_name="creative_studio",
-                intents=["creative.generate", "creative.variant"],
-                cost_per_token=0.00005,
-                avg_latency_ms=8000,
-                sla_success_rate=96.0
-            ),
-        ]
+        openai_agents: List[AgentCapability] = []
+        if OPENAI_AGENTS_ENABLED:
+            openai_agents = [
+                AgentCapability(
+                    team="openai",
+                    agent_name="ui_to_code",
+                    intents=["ui.convert", "vision.ui"],
+                    cost_per_token=0.00005,  # GPT-4o
+                    avg_latency_ms=7000,
+                    sla_success_rate=95.0
+                ),
+                AgentCapability(
+                    team="openai",
+                    agent_name="migrator_5000",
+                    intents=["code.migrate.complex"],
+                    cost_per_token=0.00005,
+                    avg_latency_ms=10000,
+                    sla_success_rate=94.0
+                ),
+                AgentCapability(
+                    team="openai",
+                    agent_name="creative_studio",
+                    intents=["creative.generate", "creative.variant"],
+                    cost_per_token=0.00005,
+                    avg_latency_ms=8000,
+                    sla_success_rate=96.0
+                ),
+            ]
+        else:
+            logger.info("OpenAI agents désactivés (OPENAI_AGENTS_ENABLED=false)")
 
         # Enregistrement
         all_agents = adk_agents + anthropic_agents + openai_agents

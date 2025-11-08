@@ -127,6 +127,8 @@ chmod +x ai
 | **creative-studio** | `creative.generate` | Variantes créatives multi-canal |
 
 > 📘 Consultez [docs/OPENAI_AGENTS.md](docs/OPENAI_AGENTS.md) pour suivre la Phase 3 (roadmap, maturité, artefacts).
+>
+> ⚙️ Activez ces prototypes uniquement en définissant `OPENAI_AGENTS_ENABLED=true` dans votre `.env` + bridge dédié.
 
 ---
 

@@ -20,7 +20,12 @@ from enum import Enum
 
 # Ajout du chemin config pour les imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from config.settings import get_anthropic_bridge_path, BRIDGE_TIMEOUT
+from config.settings import (
+    get_anthropic_bridge_path,
+    get_openai_bridge_path,
+    BRIDGE_TIMEOUT,
+    OPENAI_AGENTS_ENABLED,
+)
 
 class AgentTeam(Enum):
     ADK = "adk"
@@ -44,6 +49,9 @@ class SuperClaude:
     
     def __init__(self):
         self.session_id = 1
+        self.openai_bridge_path = get_openai_bridge_path()
+        self.openai_enabled = OPENAI_AGENTS_ENABLED and self.openai_bridge_path is not None
+
         self.agents = {
             AgentTeam.ADK: {
                 "bridge_path": os.environ.get("ADK_BRIDGE_PATH", "/Users/sahebmlik/.gemini/bridge.py"),
@@ -63,8 +71,12 @@ class SuperClaude:
                 ]
             },
             AgentTeam.OPENAI: {
-                "status": "planned",
-                "available_agents": []
+                "status": "active" if self.openai_enabled else "disabled",
+                "available_agents": [
+                    "ui_to_code",
+                    "migrator_5000",
+                    "creative_studio"
+                ] if self.openai_enabled else []
             }
         }
     
@@ -224,9 +236,76 @@ class SuperClaude:
     
     async def delegate_to_openai(self, agent_name: str, params: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Délégation à l'équipe OpenAI - Phase 3  
+        Délégation à l'équipe OpenAI - Phase 3 (protégée par flag)
         """
-        return {"status": "not_implemented", "output": "Phase 3 - Équipe OpenAI en développement"}
+        if not OPENAI_AGENTS_ENABLED:
+            return {
+                "status": "disabled",
+                "output": "OPENAI_AGENTS_ENABLED=false - activez ce flag pour utiliser les prototypes OpenAI."
+            }
+
+        bridge_path = self.openai_bridge_path
+        if not bridge_path:
+            return {
+                "status": "error",
+                "output": "Bridge OpenAI introuvable. Configurez OPENAI_BRIDGE_PATH ou assurez-vous que agents/openai/bridge.py existe."
+            }
+
+        mcp_request = {
+            "jsonrpc": "2.0",
+            "id": self.session_id,
+            "method": "tools/call",
+            "params": {
+                "name": agent_name,
+                "arguments": params
+            }
+        }
+        self.session_id += 1
+
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                "python3", "-u", bridge_path,
+                stdin=asyncio.subprocess.PIPE,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+
+            stdout, stderr = await proc.communicate(
+                input=json.dumps(mcp_request).encode()
+            )
+
+            if proc.returncode != 0:
+                return {
+                    "status": "error",
+                    "output": f"Bridge OpenAI erreur (code {proc.returncode}): {stderr.decode()}"
+                }
+
+            try:
+                response = json.loads(stdout.decode())
+            except json.JSONDecodeError as exc:
+                return {
+                    "status": "error",
+                    "output": f\"Réponse JSON invalide du bridge: {exc}\\nStdout: {stdout.decode()}\"
+                }
+
+            if "error" in response:
+                return {
+                    "status": "error",
+                    "output": response["error"].get("message", "Erreur inconnue")
+                }
+
+            content = response.get("result", {}).get("content", [])
+            if not content:
+                return {"status": "error", "output": "Réponse MCP sans contenu"}
+
+            text_content = content[0].get("text", "{}")
+            try:
+                return json.loads(text_content)
+            except json.JSONDecodeError:
+                return {"status": "success", "result": text_content}
+
+        except Exception as exc:
+            return {"status": "exception", "output": str(exc)}
     
     async def orchestrate(self, tasks: List[AgentTask]) -> Dict[str, Any]:
         """

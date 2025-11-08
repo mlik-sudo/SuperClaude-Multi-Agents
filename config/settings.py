@@ -9,6 +9,14 @@ import os
 from pathlib import Path
 from typing import Optional
 
+BOOL_TRUE = {"1", "true", "yes", "on"}
+
+
+def _str_to_bool(value: Optional[str], default: bool = False) -> bool:
+    if value is None:
+        return default
+    return value.strip().lower() in BOOL_TRUE
+
 # Racine du projet
 PROJECT_ROOT = Path(__file__).parent.parent
 
@@ -88,7 +96,7 @@ def get_adk_bridge_path() -> str:
     return str(default_path)
 
 
-def get_openai_bridge_path() -> Optional[str]:
+def get_openai_bridge_path(strict: bool = False) -> Optional[str]:
     """
     🔍 Résolution du chemin du bridge OpenAI (Phase 3)
 
@@ -105,8 +113,16 @@ def get_openai_bridge_path() -> Optional[str]:
     if default_path.exists():
         return str(default_path)
 
+    if strict:
+        raise FileNotFoundError(
+            "Bridge OpenAI introuvable : définissez OPENAI_BRIDGE_PATH ou créez agents/openai/bridge.py"
+        )
+
     return None
 
+
+# Feature flags
+OPENAI_AGENTS_ENABLED = _str_to_bool(os.environ.get("OPENAI_AGENTS_ENABLED"), False)
 
 # Configuration MCP
 MCP_SERVER_CONFIG = PROJECT_ROOT / "mcp" / "servers.json"
@@ -143,10 +159,12 @@ if __name__ == "__main__":
     if openai_path:
         print(f"✅ Bridge OpenAI: {openai_path}")
     else:
-        print("⏳ Bridge OpenAI: Non implémenté (Phase 3)")
+        status = "Désactivé" if not OPENAI_AGENTS_ENABLED else "Non implémenté (Phase 3)"
+        print(f"⏳ Bridge OpenAI: {status}")
 
     print(f"\n⚙️ Configuration:")
     print(f"  - Modèle Anthropic: {ANTHROPIC_DEFAULT_MODEL}")
     print(f"  - Modèle OpenAI: {OPENAI_DEFAULT_MODEL}")
+    print(f"  - Agents OpenAI activés: {OPENAI_AGENTS_ENABLED}")
     print(f"  - Timeout bridge: {BRIDGE_TIMEOUT}s")
     print(f"  - Timeout agent: {AGENT_TIMEOUT}s")

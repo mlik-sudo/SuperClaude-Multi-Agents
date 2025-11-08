@@ -76,6 +76,32 @@
         "async": true
       }
     },
+    "openai": {
+      "command": "python",
+      "args": ["agents/openai/bridge.py"],
+      "env": {
+        "OPENAI_API_KEY": "${OPENAI_API_KEY}",
+        "OPENAI_MODEL": "${OPENAI_MODEL:-gpt-4o}"
+      },
+      "protocol": "stdio",
+      "transport": "stdio",
+      "tools": [
+        {
+          "name": "ui_to_code",
+          "description": "Prototype Phase 3 : UI/maquette -> composant accessible"
+        },
+        {
+          "name": "migrator_5000",
+          "description": "Prototype Phase 3 : plans de migration complexes"
+        },
+        {
+          "name": "creative_studio",
+          "description": "Prototype Phase 3 : contenus marketing multi-canal"
+        }
+      ],
+      "status": "prototype",
+      "version": "0.1.0"
+    }
     "adk": {
       "command": "python",
       "args": ["agents/adk/bridge.py"],
