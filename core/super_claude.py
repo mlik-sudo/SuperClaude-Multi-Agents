@@ -46,7 +46,7 @@ class SuperClaude:
         self.session_id = 1
         self.agents = {
             AgentTeam.ADK: {
-                "bridge_path": os.environ.get("ADK_BRIDGE_PATH", "/Users/sahebmlik/.gemini/bridge.py"),
+                "bridge_path": os.environ.get("ADK_BRIDGE_PATH"),
                 "available_agents": [
                     "watch_collect",
                     "analyse_watch_report",
@@ -73,6 +73,11 @@ class SuperClaude:
         Délégation à l'équipe ADK (Google A2A)
         """
         bridge_path = self.agents[AgentTeam.ADK]["bridge_path"]
+        if not bridge_path:
+            return {
+                "status": "error",
+                "output": "ADK_BRIDGE_PATH environment variable not set."
+            }
         
         mcp_request = {
             "jsonrpc": "2.0",
