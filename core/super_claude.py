@@ -21,6 +21,7 @@ from enum import Enum
 # Ajout du chemin config pour les imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config.settings import (
+    get_adk_bridge_path,
     get_anthropic_bridge_path,
     get_openai_bridge_path,
     BRIDGE_TIMEOUT,
@@ -49,12 +50,13 @@ class SuperClaude:
     
     def __init__(self):
         self.session_id = 1
+        self.adk_bridge_path = get_adk_bridge_path()
         self.openai_bridge_path = get_openai_bridge_path()
         self.openai_enabled = OPENAI_AGENTS_ENABLED and self.openai_bridge_path is not None
 
         self.agents = {
             AgentTeam.ADK: {
-                "bridge_path": os.environ.get("ADK_BRIDGE_PATH", "/Users/sahebmlik/.gemini/bridge.py"),
+                "bridge_path": self.adk_bridge_path,
                 "available_agents": [
                     "watch_collect",
                     "analyse_watch_report",
