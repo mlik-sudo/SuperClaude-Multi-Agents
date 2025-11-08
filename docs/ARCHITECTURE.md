@@ -143,31 +143,38 @@ Format standard pour la traçabilité:
 
 ## 🎯 Catalogue d'agents
 
-*(... contenu inchangé ...)*
+### 🔵 Équipe ADK (Google A2A)
+*(contenu original inchangé)*
+
+### 🟢 Équipe Anthropic (MCP)
+*(contenu original inchangé)*
+
+### 🟠 Équipe OpenAI (Phase 3)
+*(contenu original inchangé, voir `docs/OPENAI_AGENTS.md` pour les détails)*
 
 ---
 
 ## 🧠 Flux d'orchestration
 
-*(... contenu inchangé ...)*
+*(contenu original inchangé)*
 
 ---
 
 ## 🔍 Observabilité
 
-*(... contenu inchangé ...)*
+*(contenu original inchangé)*
 
 ---
 
 ## 🧩 Extensibilité
 
-*(... contenu inchangé ...)*
+*(contenu original inchangé)*
 
 ---
 
 ## 📚 Phase 4: Mémoire et RAG (Planifié)
 
-*(... contenu inchangé ...)*
+*(contenu original inchangé)*
 
 ---
 
