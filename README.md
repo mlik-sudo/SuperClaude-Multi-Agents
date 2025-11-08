@@ -332,6 +332,15 @@ Voir [CONTRIBUTING.md](CONTRIBUTING.md) pour les guidelines.
 
 ---
 
+## 🙌 Contributors
+
+- [@mlik-sudo](https://github.com/mlik-sudo)
+- [@claude](https://github.com/claude) *(Claude)*
+- [@google-labs-jules[bot]](https://github.com/google-labs-jules%5Bbot%5D)
+- Codex *(@openai-codex – contributions MCP/Docs)*
+
+---
+
 ## 📊 Status Agents
 
 | Équipe | Status | Agents Actifs | Communication |
