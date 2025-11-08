@@ -26,7 +26,7 @@ SuperClaude Multi-Agents est un système d'orchestration intelligent qui coordon
 - ✅ **Store .ai/** - Artefacts, logs, rapports centralisés
 - ✅ **Profils configurables** - eco, default, premium, ci
 - ✅ **Observabilité** - Métriques temps réel, tracking des coûts
-- ✅ **15 agents** opérationnels (ADK + Anthropic)
+- ✅ **12 agents** opérationnels (ADK + Anthropic) + 3 prototypes OpenAI documentés (Phase 3)
 
 ---
 
@@ -126,6 +126,8 @@ chmod +x ai
 | **migrator-5000** | `code.migrate.complex` | Migrations complexes + tests |
 | **creative-studio** | `creative.generate` | Variantes créatives multi-canal |
 
+> 📘 Consultez [docs/OPENAI_AGENTS.md](docs/OPENAI_AGENTS.md) pour suivre la Phase 3 (roadmap, maturité, artefacts).
+
 ---
 
 ## 💡 Exemples d'utilisation
@@ -156,112 +158,39 @@ ai run pr.review --pr 128 --blocking --budget 1.5
 ai run security.audit --diff HEAD~1 --blocking
 
 # Génération tests + vérification couverture
-ai run test.generate --path src/components/Button.tsx
-ai run test.coverage --path src --min 70
-```
-
-### Recherche et Documentation
-
-```bash
-# Recherche dans la doc officielle
-ai run doc.search --query "Claude API rate limits"
-
-# Génération guide
-ai run writing.guide --topic "Getting started" --style technical
-```
-
-### Code et Refactoring
-
-```bash
-# Génération de code
-ai run code.generate --query "React hook for user authentication"
-
-# Refactoring
-ai run code.refactor --path src/legacy --target es2022
-
-# Migration
-ai run code.migrate --from vue2 --to vue3 --path src/
+ai run test.generate --path src/
 ```
 
 ---
 
-## 📊 Budgets et Profils
-
-Profils configurables dans `.ai/config.yaml`:
-
-| Profil | Par tâche | Journalier | Usage |
-|--------|-----------|------------|-------|
-| **eco** | $0.25 | $3 | Dev, tests locaux |
-| **default** | $0.75 | $10 | Usage quotidien |
-| **premium** | $2.00 | $30 | Production, qualité max |
-| **ci** | $1.00 | $20 | CI/CD, automatisation |
-
-```bash
-# Utiliser un profil spécifique
-ai run watch.collect --profile eco
-
-# Vérifier les dépenses
-ai status
-```
-
-Toutes les dépenses sont trackées dans `.ai/USAGE.ndjson`.
-
----
-
-## 🔒 Policies et Sécurité
-
-### Blocking Policies
-
-Défaillances qui **bloquent** le pipeline:
-
-- ❌ **Secrets détectés** (gitleaks, truffleHog)
-- ❌ **Vulnérabilités exploitables** (CVSS ≥ 7.0)
-- ❌ **Licences interdites** (GPL, AGPL, SSPL)
-- ❌ **Mutation-survived** > seuil
-
-### Advisory Policies
-
-Défaillances qui génèrent des **warnings**:
-
-- ⚠️ Style et conventions
-- ⚠️ Micro-performances
-- ⚠️ Wording et documentation
-- ⚠️ Couverture de tests < seuil
-
-Configuration dans `.ai/config.yaml`.
-
----
-
-## 📁 Structure du Projet
+## 🗂️ Structure du projet
 
 ```
-SuperClaude-Multi-Agents/
-├── ai                       # 🚀 CLI exécutable
-├── core/
-│   ├── super_claude.py      # Orchestrateur central
-│   ├── ai_core.py           # Queue, budgets, router
-│   └── contracts.py         # Contrats A2A
-├── cli/ai/
-│   └── main.py              # Interface CLI
-├── agents/
-│   ├── adk/                 # 🔵 Agents ADK (Google A2A)
-│   ├── anthropic/           # 🟢 Agents Anthropic (MCP)
-│   └── openai/              # 🟠 Agents OpenAI (Phase 3)
-├── .ai/                     # 📦 Store d'artefacts
-│   ├── INDEX.md             # Index central
-│   ├── USAGE.ndjson         # Log d'usage
-│   ├── config.yaml          # Configuration
-│   ├── logs/                # Logs d'exécution
-│   ├── reports/             # Rapports
-│   ├── artefacts/           # Artefacts générés
-│   └── cache/               # Cache temporaire
-├── docs/                    # 📚 Documentation
-│   ├── ARCHITECTURE.md      # Architecture détaillée
-│   ├── CLI_GUIDE.md         # Guide CLI
-│   └── CONTRACTS.md         # Spécification A2A
-├── config/                  # Configuration globale
-├── tests/                   # Tests unitaires et E2E
-└── requirements.txt         # Dépendances Python
+📦 SuperClaude-Multi-Agents
+├── ai                      # CLI unifiée (python entrypoint)
+├── core/                   # AI Core, contrats, orchestration
+│   ├── ai_core.py          # Queue, budgets, router
+│   ├── contracts.py        # TaskMessage / TaskResult
+│   └── super_claude.py     # Chef d'orchestre multi-équipes
+├── agents/                 # Bridges par équipe
+│   ├── adk/                # Google A2A
+│   ├── anthropic/          # MCP + SDK Claude
+│   └── openai/             # Phase 3 (bridge prototypé)
+├── .ai/                    # 📦 Store d'artefacts
+│   ├── INDEX.md            # Index central
+│   ├── USAGE.ndjson        # Log d'usage
+│   ├── config.yaml         # Configuration
+│   ├── logs/               # Logs d'exécution
+│   ├── reports/            # Rapports
+│   ├── artefacts/          # Artefacts générés
+│   └── cache/              # Cache temporaire
+├── docs/                   # 📚 Documentation
+│   ├── ARCHITECTURE.md     # Architecture détaillée
+│   ├── CLI_GUIDE.md        # Guide CLI
+│   └── CONTRACTS.md        # Spécification A2A
+├── config/                 # Configuration globale
+├── tests/                  # Tests unitaires et E2E
+└── requirements.txt        # Dépendances Python
 ```
 
 ---
@@ -275,6 +204,16 @@ SuperClaude-Multi-Agents/
 | [Contrats A2A](docs/CONTRACTS.md) | Spécification protocole A2A |
 | [Configuration](.ai/config.yaml) | Profils, policies, budgets |
 | [Index Artefacts](.ai/INDEX.md) | Catalogue des artefacts générés |
+| [Sécurité](docs/SECURITY.md) | Check-list secrets, sandbox, réponse à incident |
+| [Agents OpenAI](docs/OPENAI_AGENTS.md) | Etat de la phase 3, intents et roadmap |
+
+---
+
+## 🔐 Sécurité
+
+- Consultez [docs/SECURITY.md](docs/SECURITY.md) avant toute exécution sensible (bridges, secrets, incident).
+- Activez les scans de secrets (`gitleaks protect --staged`) et isolez vos `.env.local`.
+- Phase 3 (OpenAI) reste opt-in : utilisez des comptes et environnements jetables.
 
 ---
 
