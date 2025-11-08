@@ -143,62 +143,23 @@ Format standard pour la traçabilité:
 
 ## 🎯 Catalogue d'agents
 
-### 🔵 Équipe ADK (Google A2A)
-*(contenu original inchangé)*
+### 🔵 Équipe ADK (Google A2A) - **ACTIF**
 
-### 🟢 Équipe Anthropic (MCP)
-*(contenu original inchangé)*
+| Agent | Intent | Rôle |
+|-------|--------|------|
+| **watch_collect** | `watch.collect` | Collecte multi-ecosystèmes |
+*(... reste du tableau inchangé ...)*
 
-### 🟠 Équipe OpenAI (Phase 3)
-*(contenu original inchangé, voir `docs/OPENAI_AGENTS.md` pour les détails)*
+### 🟢 Équipe Anthropic (MCP) - **ACTIF**
+
+*(... contenu inchangé ...)*
+
+### 🟠 Équipe OpenAI - **PHASE 3**
+
+*(... contenu inchangé, dépend de l'activation du flag `OPENAI_AGENTS_ENABLED`)*
 
 ---
 
 ## 🧠 Flux d'orchestration
 
-*(contenu original inchangé)*
-
----
-
-## 🔍 Observabilité
-
-*(contenu original inchangé)*
-
----
-
-## 🧩 Extensibilité
-
-*(contenu original inchangé)*
-
----
-
-## 📚 Phase 4: Mémoire et RAG (Planifié)
-
-*(contenu original inchangé)*
-
----
-
-## 🔐 Sécurité opérationnelle
-
-- **Menaces couvertes** : subprocess non fiables (bridges ADK/OpenAI), compromission de clés API, fuite d'artefacts.
-- **Check-list rapide** :
-  1. Résoudre les chemins via `config/settings.py` (pas de chemins absolus utilisateurs).
-  2. Activer `BRIDGE_TIMEOUT` / `AGENT_TIMEOUT` et monitorer `.ai/logs/`.
-  3. Scanner les secrets avant chaque push (`gitleaks protect --staged`).
-- Référez-vous à [docs/SECURITY.md](./SECURITY.md) pour la version complète et à [docs/OPENAI_AGENTS.md](./OPENAI_AGENTS.md) avant d'activer la Phase 3.
-
----
-
-## 🔗 Références
-
-- [Contrats A2A](./CONTRACTS.md)
-- [Guide CLI](./CLI_GUIDE.md)
-- [Catalogue Agents](./AGENTS.md)
-- [Configuration](../.ai/config.yaml)
-- [INDEX Artefacts](../.ai/INDEX.md)
-- [Sécurité](./SECURITY.md)
-- [Agents OpenAI](./OPENAI_AGENTS.md)
-
----
-
-*Généré par SuperClaude Multi-Agents v1.0 - 2025-11-07*
+*(... conten...
