@@ -311,6 +311,119 @@ class AICLI:
 
         return 0
 
+    def cmd_health(self, args: argparse.Namespace) -> int:
+        """
+        Health check pour monitoring et déploiement
+
+        Vérifie:
+        - AI Core fonctionnel
+        - Bridges disponibles
+        - Configuration valide
+        - Système prêt à traiter des requêtes
+
+        Returns:
+            0 si healthy, 1 si degraded/unhealthy
+        """
+        try:
+            status = "healthy"
+            components = {}
+            issues = []
+
+            # Vérifier AI Core
+            try:
+                metrics = self.ai_core.get_metrics()
+                components["ai_core"] = "ok"
+            except Exception as e:
+                components["ai_core"] = "error"
+                issues.append(f"AI Core error: {str(e)}")
+                status = "unhealthy"
+
+            # Vérifier configuration Anthropic
+            anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
+            if anthropic_key and anthropic_key.startswith("sk-ant-"):
+                components["anthropic_config"] = "ok"
+            elif anthropic_key == "sk-ant-api03-..." or not anthropic_key:
+                components["anthropic_config"] = "not_configured"
+                issues.append("ANTHROPIC_API_KEY not configured")
+                status = "degraded" if status == "healthy" else status
+            else:
+                components["anthropic_config"] = "invalid"
+                issues.append("ANTHROPIC_API_KEY appears invalid")
+                status = "degraded" if status == "healthy" else status
+
+            # Vérifier configuration ADK
+            adk_bridge = os.environ.get("ADK_BRIDGE_PATH")
+            if adk_bridge and Path(adk_bridge).exists():
+                components["adk_bridge"] = "ok"
+            elif adk_bridge:
+                components["adk_bridge"] = "missing"
+                issues.append(f"ADK bridge not found: {adk_bridge}")
+                status = "degraded" if status == "healthy" else status
+            else:
+                components["adk_bridge"] = "not_configured"
+
+            # Vérifier répertoires essentiels
+            if self.ai_dir.exists():
+                components["data_dir"] = "ok"
+            else:
+                components["data_dir"] = "missing"
+                issues.append(".ai directory missing")
+                status = "degraded" if status == "healthy" else status
+
+            # Construire le résultat
+            health_status = {
+                "status": status,
+                "timestamp": datetime.utcnow().isoformat(),
+                "version": "1.0.0",
+                "components": components
+            }
+
+            if issues:
+                health_status["issues"] = issues
+
+            # Format de sortie
+            if args.format == "json":
+                print(json.dumps(health_status, indent=2))
+            else:
+                # Format texte coloré
+                status_emoji = {
+                    "healthy": "✅",
+                    "degraded": "⚠️",
+                    "unhealthy": "❌"
+                }
+
+                print(f"\n{status_emoji.get(status, '❓')} Health Status: {status.upper()}")
+                print("=" * 50)
+                print(f"Timestamp: {health_status['timestamp']}")
+                print(f"Version: {health_status['version']}")
+
+                print("\nComponents:")
+                for component, state in components.items():
+                    state_emoji = "✅" if state == "ok" else "⚠️" if state == "not_configured" else "❌"
+                    print(f"  {state_emoji} {component}: {state}")
+
+                if issues:
+                    print("\nIssues:")
+                    for issue in issues:
+                        print(f"  ⚠️ {issue}")
+
+            # Exit code selon le statut
+            return 0 if status == "healthy" else 1
+
+        except Exception as e:
+            error_status = {
+                "status": "unhealthy",
+                "timestamp": datetime.utcnow().isoformat(),
+                "error": str(e)
+            }
+
+            if args.format == "json":
+                print(json.dumps(error_status, indent=2))
+            else:
+                print(f"\n❌ Health Check Failed: {str(e)}")
+
+            return 1
+
 
 def main():
     """Point d'entrée principal du CLI"""
@@ -359,6 +472,10 @@ Examples:
     # Commande: list
     subparsers.add_parser("list", help="Lister les agents disponibles")
 
+    # Commande: health
+    health_parser = subparsers.add_parser("health", help="Health check du système")
+    health_parser.add_argument("--format", choices=["json", "text"], default="text", help="Format de sortie")
+
     args = parser.parse_args()
 
     # Création du CLI
@@ -379,6 +496,8 @@ Examples:
         return cli.cmd_metrics(args)
     elif args.command == "list":
         return cli.cmd_list(args)
+    elif args.command == "health":
+        return cli.cmd_health(args)
     else:
         parser.print_help()
         return 1

@@ -13,6 +13,7 @@ import subprocess
 import asyncio
 import os
 import sys
+import logging
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
@@ -21,6 +22,13 @@ from enum import Enum
 # Ajout du chemin config pour les imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config.settings import get_anthropic_bridge_path, BRIDGE_TIMEOUT
+
+# Configuration du logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(asctime)s] %(levelname)s [%(name)s]: %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 class AgentTeam(Enum):
     ADK = "adk"
@@ -42,7 +50,7 @@ class SuperClaude:
     Coordonne et délègue aux équipes d'agents spécialisés
     """
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.session_id = 1
         self.agents = {
             AgentTeam.ADK: {
@@ -245,19 +253,19 @@ class SuperClaude:
         tasks.sort(key=lambda x: x.priority, reverse=True)
         
         for task in tasks:
-            print(f"🎯 Super Claude délègue : {task.agent_name} ({task.team.value})")
-            
+            logger.info(f"Super Claude délègue: {task.agent_name} ({task.team.value})")
+
             if task.team == AgentTeam.ADK:
                 result = await self.delegate_to_adk(task.agent_name, task.params)
             elif task.team == AgentTeam.ANTHROPIC:
-                result = await self.delegate_to_anthropic(task.agent_name, task.params)  
+                result = await self.delegate_to_anthropic(task.agent_name, task.params)
             elif task.team == AgentTeam.OPENAI:
                 result = await self.delegate_to_openai(task.agent_name, task.params)
             else:
                 result = {"status": "unknown_team", "output": f"Équipe inconnue: {task.team}"}
-            
+
             results[f"{task.team.value}_{task.agent_name}"] = result
-            print(f"✅ Résultat : {result.get('status', 'unknown')}")
+            logger.info(f"Résultat: {result.get('status', 'unknown')} pour {task.agent_name}")
         
         return results
     
@@ -278,15 +286,15 @@ async def demo_super_claude():
     """
     🎭 Démonstration Super Claude Multi-Agents
     """
-    print("🧠 Super Claude Multi-Agents - Démonstration")
-    print("=" * 50)
-    
+    logger.info("Super Claude Multi-Agents - Démonstration")
+    logger.info("=" * 50)
+
     super_claude = SuperClaude()
-    
+
     # Affichage des agents disponibles
     agents = super_claude.get_available_agents()
-    print(f"📋 Agents disponibles : {agents}")
-    
+    logger.info(f"Agents disponibles: {agents}")
+
     # Orchestration de tâches
     tasks = [
         AgentTask(
@@ -297,10 +305,10 @@ async def demo_super_claude():
             priority=1
         )
     ]
-    
+
     results = await super_claude.orchestrate(tasks)
-    print(f"\n🎉 Résultats orchestration : {len(results)} tâche(s) exécutée(s)")
-    
+    logger.info(f"Résultats orchestration: {len(results)} tâche(s) exécutée(s)")
+
     return results
 
 if __name__ == "__main__":
