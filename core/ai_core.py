@@ -15,6 +15,7 @@ Version: 1.0.0
 import asyncio
 import json
 import logging
+import re
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, field
@@ -33,6 +34,72 @@ logging.basicConfig(
     format='[%(asctime)s] %(levelname)s: %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+
+# ========================================
+# Utilitaires de Sécurité
+# ========================================
+
+def redact_sensitive_data(data: Any, redact_patterns: Optional[List[str]] = None) -> Any:
+    """
+    Masque les données sensibles dans les logs et les résultats.
+
+    Args:
+        data: Données à traiter (str, dict, list, ou autre)
+        redact_patterns: Patterns regex additionnels à masquer
+
+    Returns:
+        Données avec les informations sensibles masquées
+
+    Patterns masqués par défaut:
+    - API keys (sk-*, api-*, key_*)
+    - Tokens (Bearer, JWT)
+    - Emails
+    - Mots de passe
+    - Secrets
+    """
+    # Patterns par défaut pour détecter les secrets
+    default_patterns = [
+        (r'sk-[a-zA-Z0-9-_]{20,}', 'sk-***REDACTED***'),  # API keys Anthropic/OpenAI
+        (r'api-[a-zA-Z0-9-_]{20,}', 'api-***REDACTED***'),  # Generic API keys
+        (r'key_[a-zA-Z0-9-_]{20,}', 'key_***REDACTED***'),  # Generic keys
+        (r'Bearer\s+[a-zA-Z0-9\-._~+/]+=*', 'Bearer ***REDACTED***'),  # Bearer tokens
+        (r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', '***EMAIL_REDACTED***'),  # Emails
+        (r'"password"\s*:\s*"[^"]*"', '"password": "***REDACTED***"'),  # JSON passwords
+        (r'"secret"\s*:\s*"[^"]*"', '"secret": "***REDACTED***"'),  # JSON secrets
+        (r'"token"\s*:\s*"[^"]*"', '"token": "***REDACTED***"'),  # JSON tokens
+    ]
+
+    # Ajouter les patterns custom
+    if redact_patterns:
+        for pattern in redact_patterns:
+            default_patterns.append((pattern, '***REDACTED***'))
+
+    def _redact_string(text: str) -> str:
+        """Masque les secrets dans une chaîne"""
+        if not isinstance(text, str):
+            return text
+
+        redacted = text
+        for pattern, replacement in default_patterns:
+            redacted = re.sub(pattern, replacement, redacted)
+
+        return redacted
+
+    def _redact_recursive(obj: Any) -> Any:
+        """Masque les secrets récursivement dans les structures"""
+        if isinstance(obj, str):
+            return _redact_string(obj)
+        elif isinstance(obj, dict):
+            return {k: _redact_recursive(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [_redact_recursive(item) for item in obj]
+        elif isinstance(obj, tuple):
+            return tuple(_redact_recursive(item) for item in obj)
+        else:
+            return obj
+
+    return _redact_recursive(data)
 
 
 @dataclass
@@ -482,7 +549,7 @@ class AICore:
         self.metrics["total_cost_usd"] += result.metrics.cost_usd
         self.metrics["total_latency_ms"] += result.metrics.latency_ms
 
-        # Logging dans USAGE.ndjson
+        # Logging dans USAGE.ndjson (avec redaction des secrets)
         usage_entry = {
             "timestamp": result.timestamp,
             "task_id": result.task_id,
@@ -493,9 +560,12 @@ class AICore:
             "model": result.model
         }
 
+        # Redaction des données sensibles avant logging
+        safe_usage_entry = redact_sensitive_data(usage_entry)
+
         usage_file = self.ai_dir / "USAGE.ndjson"
         with open(usage_file, "a") as f:
-            f.write(json.dumps(usage_entry) + "\n")
+            f.write(json.dumps(safe_usage_entry) + "\n")
 
         logger.info(f"Recorded result for task {result.task_id}: {result.status.value} (cost: ${result.metrics.cost_usd:.4f}, latency: {result.metrics.latency_ms}ms)")
 

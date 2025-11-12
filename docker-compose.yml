@@ -1,0 +1,126 @@
+version: '3.8'
+
+# ===================================
+# SuperClaude Multi-Agents - Docker Compose
+# ===================================
+
+services:
+  # ========================================
+  # Service principal: SuperClaude
+  # ========================================
+  superclaude:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: superclaude-multi-agents:latest
+    container_name: superclaude
+
+    # Variables d'environnement
+    env_file:
+      - .env
+
+    environment:
+      # Override optionnel des variables
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - BRIDGE_TIMEOUT=${BRIDGE_TIMEOUT:-60}
+      - AGENT_TIMEOUT=${AGENT_TIMEOUT:-120}
+
+    # Volumes pour la persistance
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./.ai:/app/.ai
+      # Montage du code source pour le développement (décommenter si nécessaire)
+      # - ./core:/app/core
+      # - ./agents:/app/agents
+      # - ./cli:/app/cli
+
+    # Ressources (ajuster selon les besoins)
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+    # Politique de redémarrage
+    restart: unless-stopped
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "python", "-c", "from cli.ai.main import AICli; import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    # Commande par défaut (peut être surchargée)
+    command: ["./ai", "status"]
+
+    # Réseau
+    networks:
+      - superclaude-network
+
+    # Labels pour monitoring
+    labels:
+      - "com.superclaude.service=orchestrator"
+      - "com.superclaude.version=1.0.0"
+      - "com.superclaude.team=multi-agents"
+
+  # ========================================
+  # Service optionnel: Monitoring (Prometheus)
+  # ========================================
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: superclaude-prometheus
+  #   volumes:
+  #     - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+  #     - prometheus-data:/prometheus
+  #   command:
+  #     - '--config.file=/etc/prometheus/prometheus.yml'
+  #     - '--storage.tsdb.path=/prometheus'
+  #   ports:
+  #     - "9090:9090"
+  #   networks:
+  #     - superclaude-network
+  #   restart: unless-stopped
+
+  # ========================================
+  # Service optionnel: Grafana
+  # ========================================
+  # grafana:
+  #   image: grafana/grafana:latest
+  #   container_name: superclaude-grafana
+  #   volumes:
+  #     - grafana-data:/var/lib/grafana
+  #   environment:
+  #     - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+  #   ports:
+  #     - "3000:3000"
+  #   networks:
+  #     - superclaude-network
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - prometheus
+
+# ========================================
+# Réseaux
+# ========================================
+networks:
+  superclaude-network:
+    driver: bridge
+    name: superclaude-net
+
+# ========================================
+# Volumes
+# ========================================
+volumes:
+  # Volume pour Prometheus (si activé)
+  # prometheus-data:
+  #   driver: local
+
+  # Volume pour Grafana (si activé)
+  # grafana-data:
+  #   driver: local

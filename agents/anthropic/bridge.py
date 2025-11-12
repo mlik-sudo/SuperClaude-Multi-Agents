@@ -48,6 +48,31 @@ class AnthropicBridge:
         Returns:
             Synthèse structurée avec sources
         """
+        # Validation des entrées
+        if not query or not isinstance(query, str):
+            return {
+                "status": "error",
+                "error": "Query doit être une chaîne non vide",
+                "result": None
+            }
+
+        if len(query) > 10000:
+            return {
+                "status": "error",
+                "error": f"Query trop longue: {len(query)} caractères (max 10000)",
+                "result": None
+            }
+
+        if depth not in ["quick", "standard", "deep"]:
+            return {
+                "status": "error",
+                "error": f"Depth invalide: {depth}. Valeurs acceptées: quick, standard, deep",
+                "result": None
+            }
+
+        # Sanitization
+        query = query.strip()
+
         if not self.client:
             return {
                 "status": "error",
@@ -105,6 +130,41 @@ Format: JSON avec {summary, key_points[], insights[], recommendations[]}"""
         Returns:
             Code généré avec explications
         """
+        # Validation des entrées
+        if not task or not isinstance(task, str):
+            return {
+                "status": "error",
+                "error": "Task doit être une chaîne non vide",
+                "result": None
+            }
+
+        if len(task) > 5000:
+            return {
+                "status": "error",
+                "error": f"Task trop longue: {len(task)} caractères (max 5000)",
+                "result": None
+            }
+
+        if not isinstance(language, str) or len(language) > 50:
+            return {
+                "status": "error",
+                "error": "Language doit être une chaîne valide (max 50 caractères)",
+                "result": None
+            }
+
+        if context and len(context) > 20000:
+            return {
+                "status": "error",
+                "error": f"Context trop long: {len(context)} caractères (max 20000)",
+                "result": None
+            }
+
+        # Sanitization
+        task = task.strip()
+        language = language.strip()
+        if context:
+            context = context.strip()
+
         if not self.client:
             return {
                 "status": "error",
@@ -169,6 +229,40 @@ Format de réponse JSON :
         Returns:
             Contenu rédigé/édité avec métadonnées
         """
+        # Validation des entrées
+        if not content or not isinstance(content, str):
+            return {
+                "status": "error",
+                "error": "Content doit être une chaîne non vide",
+                "result": None
+            }
+
+        if len(content) > 15000:
+            return {
+                "status": "error",
+                "error": f"Content trop long: {len(content)} caractères (max 15000)",
+                "result": None
+            }
+
+        valid_styles = ["professional", "casual", "technical", "marketing"]
+        if style not in valid_styles:
+            return {
+                "status": "error",
+                "error": f"Style invalide: {style}. Valeurs acceptées: {', '.join(valid_styles)}",
+                "result": None
+            }
+
+        valid_tasks = ["improve", "summarize", "expand", "translate"]
+        if task not in valid_tasks:
+            return {
+                "status": "error",
+                "error": f"Task invalide: {task}. Valeurs acceptées: {', '.join(valid_tasks)}",
+                "result": None
+            }
+
+        # Sanitization
+        content = content.strip()
+
         if not self.client:
             return {
                 "status": "error",
@@ -263,7 +357,7 @@ Format JSON : {{"result": "contenu traité", "metadata": {{"word_count": N, "ton
             }
         }
 
-    def run(self):
+    def run(self) -> None:
         """
         🚀 Boucle principale STDIO
         """
